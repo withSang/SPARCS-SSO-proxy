@@ -6,7 +6,7 @@ import { sessionSecret } from "../config";
 const SessionStore = KnexSessionStore(session);
 
 export const sessionMiddleware = session({
-  secret: sessionSecret,
+  secret: sessionSecret as string,
   resave: false,
   saveUninitialized: false,
   cookie: {
