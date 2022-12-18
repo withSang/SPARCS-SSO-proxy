@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { client } from "../utils/ssoClientWrapper";
 import { SSOUser } from "../common/types";
 
-const defaultReturnUrl = "https://sparcssso.kaist.ac.kr/";
+const sparcsssoUrl = "https://sparcssso.kaist.ac.kr/";
 
 /**
  * 로그인에 성공하면 클라이언트를 세션에 저장된 returnUrl으로 리다이렉트함
@@ -13,24 +13,19 @@ const loginDone = (req: Request, res: Response, ssoUserData: SSOUser) => {
     sid: ssoUserData.sid,
     sparcs_id: ssoUserData.sparcs_id,
   };
-  res.redirect(req.session.returnUrl || defaultReturnUrl);
+  res.redirect(req.session.returnUrl as string);
 };
 
 /**
  * 로그인에 실패하면 클라이언트를 SPARCS SSO 로그인 페이지로 리다이렉트함
  */
 const loginFalse = (req: Request, res: Response) => {
-  res.redirect(defaultReturnUrl);
+  res.redirect(`/?rd=${req.session.returnUrl}`);
 };
 
 const loginWithSPARCSSSO = (req: Request, res: Response) => {
   // 로그인 후 돌아갈 url을 세션에 저장함
-  if (req.query.rd === undefined) {
-    loginFalse(req, res);
-    return;
-  }
-  const returnUrl = String(req.query.rd) || defaultReturnUrl;
-  req.session.returnUrl = returnUrl;
+  req.session.returnUrl = String(req.query.rd ?? sparcsssoUrl);
 
   // SPARCS SSO 로그인 페이지로 리다이렉트함
   const { url, state } = client.getLoginParams();
@@ -53,10 +48,13 @@ const loginCallback = (req: Request, res: Response) => {
   }
 };
 
+/**
+ * 로그아웃 시 SPARCS SSO에서도 로그아웃 시키기
+ */
 const logoutFromSPARCSSSO = (req: Request, res: Response) => {
   const sid = req.session.user?.sid;
   req.session.destroy(() => {
-    const logoutUrl = client.getLogoutUrl(sid, defaultReturnUrl);
+    const logoutUrl = client.getLogoutUrl(sid, sparcsssoUrl);
     res.redirect(logoutUrl);
   });
 };
