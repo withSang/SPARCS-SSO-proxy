@@ -100,5 +100,8 @@ dist
 # DynamoDB Local files
 .dynamodb/
 
+# SQLite Local files
+connect-session-knex.sqlite
+
 # TernJS port file
 .tern-port
